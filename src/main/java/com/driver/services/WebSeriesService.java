@@ -46,6 +46,8 @@ public class WebSeriesService {
             throw new RuntimeException("Series is already present");
         }
 
+        productionHouse.getWebSeriesList().add(series);
+
         ProductionHouse savedProductionHouse = productionHouseRepository.save(productionHouse);
 
         List<WebSeries> list = savedProductionHouse.getWebSeriesList();
