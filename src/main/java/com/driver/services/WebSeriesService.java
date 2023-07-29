@@ -1,6 +1,9 @@
 package com.driver.services;
 
 import com.driver.EntryDto.WebSeriesEntryDto;
+import com.driver.Exception.ProductionError;
+import com.driver.Exception.ProductionError;
+import com.driver.Transformer.WebSeriesTransformer;
 import com.driver.model.ProductionHouse;
 import com.driver.model.WebSeries;
 import com.driver.repository.ProductionHouseRepository;
@@ -20,51 +23,43 @@ public class WebSeriesService {
     @Autowired
     ProductionHouseRepository productionHouseRepository;
 
-    public Integer addWebSeries(WebSeriesEntryDto webSeriesEntryDto)throws  Exception{
+    public Integer addWebSeries(WebSeriesEntryDto webSeriesEntryDto)throws  Exception, ProductionError{
 
         //Add a webSeries to the database and update the ratings of the productionHouse
         //Incase the seriesName is already present in the Db throw Exception("Series is already present")
         //use function written in Repository Layer for the same
         //Dont forget to save the production and webseries Repo
 
-        Optional<ProductionHouse> productionHouseOptional = productionHouseRepository.findById(webSeriesEntryDto.getProductionHouseId());
-
-        if(!productionHouseOptional.isPresent()){
-            throw new RuntimeException("ProductionHouse not available");
+        WebSeries webSeries = WebSeriesTransformer.convertDtoToEntity(webSeriesEntryDto);
+        WebSeries checkSeries = webSeriesRepository.findBySeriesName(webSeries.getSeriesName());
+        if(checkSeries != null){
+            throw new Exception("Series is already present");
+        }
+        int id = webSeriesEntryDto.getProductionHouseId();
+        Optional<ProductionHouse> productionHouseOpt = productionHouseRepository.findById(id);
+        ProductionHouse productionHouse = productionHouseOpt.get();
+        if(productionHouse == null){
+            throw new ProductionError("Production house is not present");
         }
 
-        ProductionHouse productionHouse = productionHouseOptional.get();
+        webSeries.setProductionHouse(productionHouse);
+        webSeries = webSeriesRepository.save(webSeries);
 
-        WebSeries series = new WebSeries();
-        series.setSeriesName(webSeriesEntryDto.getSeriesName());
-        series.setAgeLimit(webSeriesEntryDto.getAgeLimit());
-        series.setRating(webSeriesEntryDto.getRating());
-        series.setProductionHouse(productionHouse);
-        series.setSubscriptionType(webSeriesEntryDto.getSubscriptionType());
+        List<WebSeries> seriesList = productionHouse.getWebSeriesList();
+        seriesList.add(webSeries);
 
-        if(webSeriesRepository.findBySeriesName(series.getSeriesName()) != null){
-            throw new RuntimeException("Series is already present");
+        double productionHouseRating = 0;
+        for(WebSeries series : seriesList){
+            productionHouseRating += series.getRating();
         }
+        int seriesCount = seriesList.size();
+        productionHouseRating = productionHouseRating / seriesCount;
 
-        productionHouse.getWebSeriesList().add(series);
+        productionHouse.setRatings(productionHouseRating);
 
-        List<WebSeries> list = productionHouse.getWebSeriesList();
+        productionHouseRepository.save(productionHouse);
 
-        int ratingSum = 0;
-        int len = 0;
-
-        for(WebSeries series1 : list){
-            len++;
-            ratingSum+=series1.getRating();
-        }
-
-        productionHouse.setRatings((double) ratingSum/len);
-
-        ProductionHouse savedProductionHouse = productionHouseRepository.save(productionHouse);
-
-        WebSeries last = list.get(list.size()-1);
-
-        return last.getId();
+        return webSeries.getId();
     }
 
 }

@@ -18,7 +18,7 @@ public class ProductionHouse {
     private double ratings;
 
     @OneToMany(mappedBy = "productionHouse",cascade = CascadeType.ALL)
-    private List<WebSeries> webSeriesList = new ArrayList<>();
+    private List<WebSeries> webSeriesList;
 
     public ProductionHouse(String name) {
         this.name = name;
