@@ -1,8 +1,6 @@
 package com.driver.services;
 
 
-import com.driver.model.Subscription;
-import com.driver.model.SubscriptionType;
 import com.driver.model.User;
 import com.driver.model.WebSeries;
 import com.driver.repository.UserRepository;
@@ -11,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -23,18 +22,36 @@ public class UserService {
 
 
     public Integer addUser(User user){
-
         //Jut simply add the user to the Db and return the userId returned by the repository
-        return null;
+        User savedUser = userRepository.save(user);
+        return savedUser.getId();
     }
 
     public Integer getAvailableCountOfWebSeriesViewable(Integer userId){
 
         //Return the count of all webSeries that a user can watch based on his ageLimit and subscriptionType
-        //Hint: Take out all the Webseries from the WebRepository
+        //Hint: Take out all the Web series from the WebRepository
+
+        List<WebSeries> webSeries = webSeriesRepository.findAll();
+
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if(!userOptional.isPresent()){
+            throw new RuntimeException("User does not exist.");
+        }
+
+        User user = userOptional.get();
+
+        int count = 0;
+
+        for(WebSeries series : webSeries){
+            if(user.getAge() >= series.getAgeLimit() && series.getSubscriptionType().toString().equals(user.getSubscription().toString())){
+                count++;
+            }
+        }
 
 
-        return null;
+        return count;
     }
 
 
