@@ -48,9 +48,19 @@ public class WebSeriesService {
 
         productionHouse.getWebSeriesList().add(series);
 
-        ProductionHouse savedProductionHouse = productionHouseRepository.save(productionHouse);
+        List<WebSeries> list = productionHouse.getWebSeriesList();
 
-        List<WebSeries> list = savedProductionHouse.getWebSeriesList();
+        int ratingSum = 0;
+        int len = 0;
+
+        for(WebSeries series1 : list){
+            len++;
+            ratingSum+=series1.getRating();
+        }
+
+        productionHouse.setRatings((double) ratingSum/len);
+
+        ProductionHouse savedProductionHouse = productionHouseRepository.save(productionHouse);
 
         WebSeries last = list.get(list.size()-1);
 
