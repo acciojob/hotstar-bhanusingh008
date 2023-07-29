@@ -42,7 +42,7 @@ public class WebSeriesService {
         series.setProductionHouse(productionHouse);
         series.setSubscriptionType(webSeriesEntryDto.getSubscriptionType());
 
-        if(webSeriesRepository.findBySeriesName(series.getSeriesName()) == null){
+        if(webSeriesRepository.findBySeriesName(series.getSeriesName()) != null){
             throw new RuntimeException("Series is already present");
         }
 
